@@ -1,0 +1,84 @@
+﻿
+using Domain.Events;
+
+namespace Domain.Aggregates
+{
+    public class Order
+    {
+        public Guid Id { get; private set; }
+        public string Customer { get; private set; }
+        public bool Confirmed { get; private set; }
+        public List<(string product, int quantity)> Items { get; private set; }
+
+        private readonly List<IOrderEvent> _uncommittedEvents = new List<IOrderEvent>();
+        public IReadOnlyCollection<IOrderEvent> UncommittedEvents => _uncommittedEvents.AsReadOnly();
+
+        private Order()
+        {
+
+            Items = new List<(string, int)>();
+        }
+
+        public static Order Create(Guid orderId, string customer)
+        {
+            var order = new Order();
+            var evt = new CreatedOrder(orderId, customer);
+            order.Apply(evt);
+            return order;
+        }
+
+        public void AddProduct(string product, int quantity)
+        {
+            var evt = new AddedProduct(this.Id, product, quantity);
+            Apply(evt);
+        }
+
+        public void Confirm()
+        {
+            var evt = new ConfirmedOrder(this.Id);
+            Apply(evt);
+        }
+
+        public static Order Rebuild(IEnumerable<IOrderEvent> eventHistory)
+        {
+            var order = new Order();
+            foreach (var evt in eventHistory)
+            {
+                order.Apply(evt, isReplaying: true);
+            }
+            return order;
+        }
+
+        private void Apply(IOrderEvent evt, bool isReplaying = false)
+        {
+            switch (evt)
+            {
+                case CreatedOrder e:
+                    Id = e.OrderId;
+                    Customer = e.Customer;
+                    Confirmed = false;
+                    Items = new List<(string, int)>();
+                    break;
+
+                case AddedProduct e:
+                    Items.Add((e.ProductName, e.Quantity));
+                    break;
+
+                case ConfirmedOrder e:
+                    Confirmed = true;
+                    break;
+            }
+
+            if (!isReplaying)
+            {
+                _uncommittedEvents.Add(evt);
+            }
+        }
+
+        public void ClearUncommittedEvents()
+        {
+            _uncommittedEvents.Clear();
+        }
+    }
+
+}
