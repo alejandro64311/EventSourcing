@@ -1,6 +1,5 @@
 ﻿
-
-namespace Domain.Events
+namespace Domain.Events.Order
 {
     public class AddedProduct: IOrderEvent
     {
@@ -8,15 +7,16 @@ namespace Domain.Events
         public string ProductName { get; }
         public int Quantity { get; }
         public Guid OrderId { get; set; }
-        public DateTime OcurredOn { get; set; }
-        
+        public DateTime OccurredOn { get; set; }
+        public string EventType { get; set; }
 
         public AddedProduct(Guid orderId, string productName, int quantity)
         {
             OrderId = orderId;
             ProductName = productName;
             Quantity = quantity;
-            OcurredOn = DateTime.UtcNow;
+            OccurredOn = DateTime.UtcNow;
+            EventType = nameof(AddedProduct);
         }
     }
 }

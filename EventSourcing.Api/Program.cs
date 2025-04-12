@@ -3,8 +3,9 @@ using Persistence.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddScoped<IEventStore, InMemoryEventStore>();
+builder.Services.AddSingleton<IEventStore, InMemoryEventStore>();
 builder.Services.AddTransient<OrderRepository>();
+builder.Services.AddTransient<ShippingRepository>();
 
 // Add services to the container.
 

@@ -1,5 +1,5 @@
-﻿
-using Domain.Events;
+﻿using Domain.Events;
+using Domain.Events.Order;
 
 namespace Domain.Aggregates
 {
@@ -10,8 +10,8 @@ namespace Domain.Aggregates
         public bool Confirmed { get; private set; }
         public List<(string product, int quantity)> Items { get; private set; }
 
-        private readonly List<IOrderEvent> _uncommittedEvents = new List<IOrderEvent>();
-        public IReadOnlyCollection<IOrderEvent> UncommittedEvents => _uncommittedEvents.AsReadOnly();
+        private readonly List<IEvent> _uncommittedEvents = new List<IEvent>();
+        public IReadOnlyCollection<IEvent> UncommittedEvents => _uncommittedEvents.AsReadOnly();
 
         private Order()
         {
@@ -39,7 +39,7 @@ namespace Domain.Aggregates
             Apply(evt);
         }
 
-        public static Order Rebuild(IEnumerable<IOrderEvent> eventHistory)
+        public static Order Rehydrate(IEnumerable<IEvent> eventHistory)
         {
             var order = new Order();
             foreach (var evt in eventHistory)
@@ -49,7 +49,7 @@ namespace Domain.Aggregates
             return order;
         }
 
-        private void Apply(IOrderEvent evt, bool isReplaying = false)
+        private void Apply(IEvent evt, bool isReplaying = false)
         {
             switch (evt)
             {
