@@ -3,17 +3,15 @@ using Domain.Events.Order;
 
 namespace Domain.Aggregates
 {
-    public class Order
+    public class Order:  BaseAggregate<Order>
     {
         public Guid Id { get; private set; }
         public string Customer { get; private set; }
         public bool Confirmed { get; private set; }
         public List<(string product, int quantity)> Items { get; private set; }
 
-        private readonly List<IEvent> _uncommittedEvents = new List<IEvent>();
-        public IReadOnlyCollection<IEvent> UncommittedEvents => _uncommittedEvents.AsReadOnly();
 
-        private Order()
+        public Order()
         {
 
             Items = new List<(string, int)>();
@@ -39,17 +37,7 @@ namespace Domain.Aggregates
             Apply(evt);
         }
 
-        public static Order Rehydrate(IEnumerable<IEvent> eventHistory)
-        {
-            var order = new Order();
-            foreach (var evt in eventHistory)
-            {
-                order.Apply(evt, isReplaying: true);
-            }
-            return order;
-        }
-
-        private void Apply(IEvent evt, bool isReplaying = false)
+        protected override void Apply(IEvent evt, bool isReplaying = false)
         {
             switch (evt)
             {
@@ -75,10 +63,7 @@ namespace Domain.Aggregates
             }
         }
 
-        public void ClearUncommittedEvents()
-        {
-            _uncommittedEvents.Clear();
-        }
+       
     }
 
 }
